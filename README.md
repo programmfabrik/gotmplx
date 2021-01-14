@@ -19,3 +19,6 @@ The `--var test=val2` will be available in the template as **.Var.Test**.
 The `--csv "nr1=test.csv"` will be available in the template as **.CSV.Nr1**.
 
 You can use *-* as filename.
+
+
+Check out `sprig.FuncMap()`
