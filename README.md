@@ -1,6 +1,5 @@
 # gotmplx
 
-* **.Env**
 * Cmdline --var as **.Var**
 
 ```bash
@@ -20,5 +19,10 @@ The `--csv "nr1=test.csv"` will be available in the template as **.CSV.Nr1**.
 
 You can use *-* as filename.
 
+## Environment
+
+The environment will be included by default as **.Env**.
+
+# Template functions
 
 Check out `sprig.FuncMap()`
