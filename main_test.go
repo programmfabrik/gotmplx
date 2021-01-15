@@ -37,7 +37,7 @@ Sample template START
 Environment
     Env env1 => val1
 Variables
-    Var moar => data
+    Var moar => more=data
     Var some => something
 CSV data
     CSV one
@@ -106,7 +106,7 @@ func TestTemplate(t *testing.T) {
 	rootCmd.SetArgs([]string{
 		"--eval", inputSampleTmpl,
 		"--var", "some=something",
-		"--var", "moar=data",
+		"--var", "moar=more=data",
 		"--csv", fmt.Sprintf("one=%s", csvFilePath),
 	})
 

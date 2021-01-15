@@ -57,7 +57,7 @@ func parseVariables(cmd *cobra.Command, args []string) {
 	templateEnvVariables = make(map[string]interface{})
 	for _, v := range envStr {
 		parts := strings.Split(v, "=")
-		templateEnvVariables[parts[0]] = parts[1]
+		templateEnvVariables[parts[0]] = strings.Join(parts[1:], "=")
 	}
 
 	templateCSVVariables = make(map[string][]map[string]interface{})
@@ -79,7 +79,7 @@ func parseVariables(cmd *cobra.Command, args []string) {
 	templateVariables = make(map[string]interface{})
 	for _, v := range vars {
 		parts := strings.Split(v, "=")
-		templateVariables[parts[0]] = parts[1]
+		templateVariables[parts[0]] = strings.Join(parts[1:], "=")
 	}
 }
 
