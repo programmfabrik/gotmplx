@@ -9,12 +9,18 @@ import (
 	"testing"
 )
 
-var inputSampleTmpl = `
-Sample template START
+var inputSamplePartialTmpl = `
+{{ define "partial_1" }}
 Environment
 {{- range $k, $v := .Env }}
     Env {{ $k }} => {{ $v }}
 {{- end }}
+{{- end }}
+`
+
+var inputSampleTmpl = `
+Sample template START
+{{- template "partial_1" . }}
 Variables
 {{- range $k, $v := .Var }}
     Var {{ $k }} => {{ $v }}
@@ -91,23 +97,76 @@ FALSE,unib-heidelberg,fylr-unib-heidelberg,https://unib-heidelberg.fylr.dev
 FALSE,leon-testing,fylr-leon-testing,https://leon-testing.fylr.dev
 `
 
-func TestTemplate(t *testing.T) {
+var tFolder string 
+func TestMain(t *testing.T) {
+    tFolder = t.TempDir()
+    t.Run("one", testTemplateEval)
+    t.Run("two", testTemplateEvalCSVStdIn)
+}
 
-	// Temporarily flush csv file into disk
-	tFolder := t.TempDir()
+func testTemplateEval(t *testing.T) {
+
 	csvFilePath := filepath.Join(tFolder, "test_sample.csv")
 	err := ioutil.WriteFile(csvFilePath, []byte(inputSampleCSV), 0644)
 	if err != nil {
 		t.Fatal(err)
+    }
+    
+    tpl1FilePath := filepath.Join(tFolder, "partial1.txt")
+	err = ioutil.WriteFile(tpl1FilePath, []byte(inputSamplePartialTmpl), 0644)
+	if err != nil {
+		t.Fatal(err)
 	}
 
+    inBuf := bytes.NewBufferString(inputSampleCSV)
+    rootCmd.SetIn(inBuf)
 	outBuf := bytes.NewBufferString("")
 	rootCmd.SetOut(outBuf)
 	rootCmd.SetArgs([]string{
 		"--eval", inputSampleTmpl,
 		"--var", "some=something",
-		"--var", "moar=more=data",
-		"--csv", fmt.Sprintf("one=%s", csvFilePath),
+        "--var", "moar=more=data",
+        "--csv", fmt.Sprintf("one=%s", csvFilePath),
+        tpl1FilePath,
+	})
+
+	// Clear / set env
+	os.Clearenv()
+	err = os.Setenv("env1", "val1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = rootCmd.Execute()
+	if err != nil {
+		t.Fatal(err)
+	}
+	out, err := ioutil.ReadAll(outBuf)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(out) != outputSampleText {
+		t.Fatalf("Expected:\n%s\nGot:\n%s", outputSampleText, string(out))
+    }
+}
+
+func testTemplateEvalCSVStdIn(t *testing.T) {
+
+    tpl1FilePath := filepath.Join(tFolder, "partial1.txt")
+	err := ioutil.WriteFile(tpl1FilePath, []byte(inputSamplePartialTmpl), 0644)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+    inBuf := bytes.NewBufferString(inputSampleCSV)
+    rootCmd.SetIn(inBuf)
+	outBuf := bytes.NewBufferString("")
+	rootCmd.SetOut(outBuf)
+	rootCmd.SetArgs([]string{
+		"--eval", inputSampleTmpl,
+		"--var", "some=something",
+        "--var", "moar=more=data",
+        "--csv", "one=-",
+        tpl1FilePath,
 	})
 
 	// Clear / set env

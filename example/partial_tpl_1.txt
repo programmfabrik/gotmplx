@@ -1,0 +1,8 @@
+{{ define "partial_1" }}
+Partial template 1 START
+Environment
+{{ range $k, $v := .Env }}
+    Env {{ $k }} => {{ $v }}
+{{ end }} 
+Partial template 1 END
+{{ end }}

@@ -1,0 +1,9 @@
+active,instance,db,url
+bool,string,string,string
+TRUE,uni-muenster,fylr-uni-muenster,https://uni-muenster.fylr.dev
+TRUE,uni-muenster-archiv,fylr-uni-muenster-archiv,https://uni-muenster-archiv.fylr.dev
+TRUE,census,fylr-census,https://census.fylr.dev
+TRUE,demo,fylr-demo,https://demo.fylr.dev
+FALSE,gta-collections,fylr-gta-collections,https://gta-collections.fylr.dev
+FALSE,unib-heidelberg,fylr-unib-heidelberg,https://unib-heidelberg.fylr.dev
+FALSE,leon-testing,fylr-leon-testing,https://leon-testing.fylr.dev

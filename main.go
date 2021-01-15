@@ -12,7 +12,7 @@ import (
 	"html/template"
 	"io/ioutil"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/Masterminds/sprig"
@@ -22,9 +22,8 @@ import (
 
 var (
 	rootCmd = &cobra.Command{
-		Use:     "gotmplx",
+		Use:     "gotmplx TEMPLATE [PARTIAL_TEMPLATE]*",
 		Short:   "gotmplx: Command line tool to render a go template",
-		Args:    cobra.MaximumNArgs(1),
 		Version: "1.0",
 		Run:     render,
 		PreRun:  parseVariables,
@@ -38,9 +37,9 @@ var (
 )
 
 func init() {
-	rootCmd.Flags().StringArrayVarP(&vars, "var", "", []string{}, "Parse and use variable in template")
-	rootCmd.Flags().StringArrayVarP(&csvs, "csv", "", []string{}, "Parse and use CSV file rows in template")
-	rootCmd.Flags().StringVarP(&eval, "eval", "e", "", "Parse this text instead of file argument")
+	rootCmd.Flags().StringArrayVarP(&vars, "var", "", []string{}, "Parse and use variable in template (--var key=value)")
+	rootCmd.Flags().StringArrayVarP(&csvs, "csv", "", []string{}, "Parse and use CSV file rows in template (--csv key=file)")
+	rootCmd.Flags().StringVarP(&eval, "eval", "e", "", "Parse this text instead of file argument (--eval \"{{ .Var.myvar }}\"")
 }
 
 func main() {
@@ -63,11 +62,25 @@ func parseVariables(cmd *cobra.Command, args []string) {
 	templateCSVVariables = make(map[string][]map[string]interface{})
 	for _, v := range csvs {
 		parts := strings.Split(v, "=")
-		csvBytes, err := ioutil.ReadFile(parts[1])
-		if err != nil {
-			fmt.Fprint(cmd.OutOrStderr(), errors.Wrapf(err, "Could not read CSV file %s", parts[1]))
-			os.Exit(1)
+		csvFileName := strings.Join(parts[1:], "=")
+		var (
+			csvBytes []byte
+			err error
+		)
+		if csvFileName == "-" {
+			csvBytes, err = ioutil.ReadAll(cmd.InOrStdin())
+			if err != nil {
+				fmt.Fprint(cmd.OutOrStderr(), errors.Wrap(err, "Could not read stdin"))
+				os.Exit(1)
+			}
+		} else {
+			csvBytes, err = ioutil.ReadFile(csvFileName)
+			if err != nil {
+				fmt.Fprint(cmd.OutOrStderr(), errors.Wrapf(err, "Could not read CSV file %s", parts[1]))
+				os.Exit(1)
+			}
 		}
+
 		vars, err := CSVToMap(csvBytes, ',')
 		if err != nil {
 			fmt.Fprint(cmd.OutOrStderr(), errors.Wrapf(err, "Could not parse CSV file %s", parts[1]))
@@ -96,27 +109,43 @@ func render(cmd *cobra.Command, args []string) {
 	}
 
 	if eval != "" {
-		tpl, err = template.New("inline").Funcs(sprig.FuncMap()).Parse(eval)
+		tpl = template.New("eval").Funcs(sprig.FuncMap())
+		tpl, err = tpl.Parse(eval)
 		if err != nil {
 			fmt.Fprint(cmd.OutOrStderr(), errors.Wrapf(err, "Could not parse inline template `%s`", eval))
 			os.Exit(1)
 		}
-	} else {
-		if args[0] == "-" {
+	}
+
+	for _, arg := range args {
+		var t *template.Template
+		if arg == "-" {
+			if tpl == nil {
+				tpl = template.New("stdin").Funcs(sprig.FuncMap())
+				t = tpl
+			} else {
+				t = tpl.New("stdin")
+			}
 			stdInBytes, err := ioutil.ReadAll(cmd.InOrStdin())
 			if err != nil {
 				fmt.Fprint(cmd.OutOrStderr(), errors.Wrap(err, "Could not read stdin"))
 				os.Exit(1)
 			}
-			tpl, err = template.New("stdin").Funcs(sprig.FuncMap()).Parse(string(stdInBytes))
+			_, err = t.Parse(string(stdInBytes))
 			if err != nil {
 				fmt.Fprint(cmd.OutOrStderr(), errors.Wrapf(err, "Could not parse template from stdin: %s", string(stdInBytes)))
 				os.Exit(1)
 			}
 		} else {
-			tpl, err = template.New(path.Base(args[0])).Funcs(sprig.FuncMap()).ParseFiles(args[0])
+			if tpl == nil {
+				tpl = template.New(filepath.Base(arg)).Funcs(sprig.FuncMap())
+				t = tpl
+			} else {
+				t = tpl.New(filepath.Base(arg))
+			}
+			_, err = t.ParseFiles(arg)
 			if err != nil {
-				fmt.Fprint(cmd.OutOrStderr(), errors.Wrapf(err, "Could not parse template file %s", args[0]))
+				fmt.Fprint(cmd.OutOrStderr(), errors.Wrapf(err, "Could not parse template file %s", arg))
 				os.Exit(1)
 			}
 		}
@@ -130,7 +159,7 @@ func render(cmd *cobra.Command, args []string) {
 
 	err = tpl.Execute(cmd.OutOrStdout(), data)
 	if err != nil {
-		fmt.Fprint(cmd.OutOrStderr(), errors.Wrapf(err, "Could not execute template file %s with data %v", args[0], data))
+		fmt.Fprint(cmd.OutOrStderr(), errors.Wrapf(err, "Could not execute template file %s with data %v", tpl.Name(), data))
 		os.Exit(1)
 	}
 }
