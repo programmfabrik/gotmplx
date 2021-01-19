@@ -1,17 +1,17 @@
 Sample template START
-{{ template "partial_1" . }}
+{{- template "partial_1" . }}
 Variables
-{{ range $k, $v := .Var }}
+{{- range $k, $v := .Var }}
     Var {{ $k }} => {{ $v }}
-{{ end }} 
+{{- end }} 
 CSV data
-{{ range $k, $v := .CSV }}
+{{- range $k, $v := .CSV }}
     CSV {{ $k }}
-    {{ range $i, $v2 := $v }}
+    {{- range $i, $v2 := $v }}
         Row {{ $i }}
-        {{ range $k3, $v3 := $v2 }}
+        {{- range $k3, $v3 := $v2 }}
             Field {{ $k3 }} => {{ $v3 }}
-        {{ end }}         
-    {{ end }} 
-{{ end }} 
+        {{- end }}         
+    {{- end }} 
+{{- end }} 
 Sample template END
