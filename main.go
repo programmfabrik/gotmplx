@@ -55,18 +55,25 @@ func parseVariables(cmd *cobra.Command, args []string) {
 	envStr := os.Environ()
 	templateEnvVariables = make(map[string]interface{})
 	for _, v := range envStr {
-		parts := strings.Split(v, "=")
-		templateEnvVariables[parts[0]] = strings.Join(parts[1:], "=")
+		key, value, err := splitVarParam(v)
+		if err != nil {
+			fmt.Fprint(cmd.OutOrStderr(), err)
+			os.Exit(1)
+		}
+		templateEnvVariables[key] = value
 	}
 
 	templateCSVVariables = make(map[string][]map[string]interface{})
 	for _, v := range csvs {
-		parts := strings.Split(v, "=")
-		csvFileName := strings.Join(parts[1:], "=")
 		var (
 			csvBytes []byte
 			err error
 		)
+		key, csvFileName, err := splitVarParam(v)
+		if err != nil {
+			fmt.Fprint(cmd.OutOrStderr(), err)
+			os.Exit(1)
+		}
 		if csvFileName == "-" {
 			csvBytes, err = ioutil.ReadAll(cmd.InOrStdin())
 			if err != nil {
@@ -76,23 +83,25 @@ func parseVariables(cmd *cobra.Command, args []string) {
 		} else {
 			csvBytes, err = ioutil.ReadFile(csvFileName)
 			if err != nil {
-				fmt.Fprint(cmd.OutOrStderr(), errors.Wrapf(err, "Could not read CSV file %s", parts[1]))
+				fmt.Fprint(cmd.OutOrStderr(), errors.Wrapf(err, "Could not read CSV file %s", key))
 				os.Exit(1)
 			}
 		}
-
-		vars, err := CSVToMap(csvBytes, ',')
+		templateCSVVariables[key], err = CSVToMap(csvBytes, ',')
 		if err != nil {
-			fmt.Fprint(cmd.OutOrStderr(), errors.Wrapf(err, "Could not parse CSV file %s", parts[1]))
+			fmt.Fprint(cmd.OutOrStderr(), errors.Wrapf(err, "Could not parse CSV file %s", csvFileName))
 			os.Exit(1)
 		}
-		templateCSVVariables[parts[0]] = vars
 	}
 
 	templateVariables = make(map[string]interface{})
 	for _, v := range vars {
-		parts := strings.Split(v, "=")
-		templateVariables[parts[0]] = strings.Join(parts[1:], "=")
+		key, value, err := splitVarParam(v)
+		if err != nil {
+			fmt.Fprint(cmd.OutOrStderr(), err)
+			os.Exit(1)
+		}
+		templateVariables[key] = value
 	}
 }
 
@@ -162,4 +171,12 @@ func render(cmd *cobra.Command, args []string) {
 		fmt.Fprint(cmd.OutOrStderr(), errors.Wrapf(err, "Could not execute template file %s with data %v", tpl.Name(), data))
 		os.Exit(1)
 	}
+}
+
+func splitVarParam(param string) (string, string, error) {
+	parts := strings.Split(param, "=")
+	if len(parts) < 2 {
+		return "", "", errors.Errorf("CSV parameters should be `name=file`, given %s", param)
+	}
+	return parts[0], strings.Join(parts[1:], "="), nil
 }
