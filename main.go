@@ -25,9 +25,11 @@ var (
 		Use:     "gotmplx TEMPLATE [PARTIAL_TEMPLATE]*",
 		Short:   "gotmplx: Command line tool to render a go template",
 		Version: "1.0",
+		Example: "gotmplx --var some=something --csv one=example/sample1.csv example/sample1.txt example/partial_tpl_1.txt",
 		Run:     render,
 		PreRun:  parseVariables,
 	}
+	showVersion bool
 	vars                 []string
 	csvs                 []string
 	eval                 string
@@ -37,7 +39,8 @@ var (
 )
 
 func init() {
-	rootCmd.Flags().StringArrayVarP(&vars, "var", "", []string{}, "Parse and use variable in template (--var key=value)")
+	rootCmd.Flags().BoolVarP(&showVersion, "version", "v", false, "Version of gotmplx")
+	rootCmd.Flags().StringArrayVarP(&vars, "var", "", []string{}, "Parse and use variable in template (--var myvar=value)")
 	rootCmd.Flags().StringArrayVarP(&csvs, "csv", "", []string{}, "Parse and use CSV file rows in template (--csv key=file)")
 	rootCmd.Flags().StringVarP(&eval, "eval", "e", "", "Parse this text instead of file argument (--eval \"{{ .Var.myvar }}\"")
 }
@@ -113,7 +116,7 @@ func render(cmd *cobra.Command, args []string) {
 	)
 
 	if len(args) == 0 && eval == "" {
-		fmt.Fprintln(cmd.OutOrStderr(), "No file argument neither eval string has been defined")
+		cmd.Usage()
 		os.Exit(1)
 	}
 
