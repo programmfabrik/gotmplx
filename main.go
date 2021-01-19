@@ -176,7 +176,7 @@ func render(cmd *cobra.Command, args []string) {
 func splitVarParam(param string) (string, string, error) {
 	parts := strings.Split(param, "=")
 	if len(parts) < 2 {
-		return "", "", errors.Errorf("CSV parameters should be `name=file`, given %s", param)
+		return "", "", errors.Errorf("Flag arguments should be `name=value`, given %s", param)
 	}
 	return parts[0], strings.Join(parts[1:], "="), nil
 }
