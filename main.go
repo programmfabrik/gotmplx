@@ -22,10 +22,15 @@ import (
 )
 
 var (
+	version = "dev"
+	commit  = "none-commit"
+	date    = "2006-01-02 15:04:05Z07:00"
+	builtBy = "unknown"
+
 	rootCmd = &cobra.Command{
 		Use:     "gotmplx TEMPLATE [PARTIAL_TEMPLATE]*",
 		Short:   "gotmplx: Command line tool to render a go template",
-		Version: "1.0",
+		Version: fmt.Sprintf("%s %s %v %s", version, commit, date, builtBy),
 		Example: "gotmplx --var some=something --csv one=example/sample1.csv example/sample1.txt example/partial_tpl_1.txt",
 		Run:     render,
 		PreRun:  parseVariables,
