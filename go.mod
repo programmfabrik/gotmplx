@@ -11,6 +11,6 @@ require (
 	github.com/imdario/mergo v0.3.11 // indirect
 	github.com/mitchellh/copystructure v1.0.0 // indirect
 	github.com/pkg/errors v0.8.1
-	github.com/programmfabrik/go-csvx v1.0.0 // indirect
+	github.com/programmfabrik/go-csvx v1.0.0
 	github.com/spf13/cobra v1.1.1
 )
