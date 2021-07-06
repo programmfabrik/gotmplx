@@ -17,6 +17,7 @@ import (
 
 	"github.com/Masterminds/sprig"
 	"github.com/pkg/errors"
+	"github.com/programmfabrik/go-csvx"
 	"github.com/spf13/cobra"
 )
 
@@ -29,7 +30,7 @@ var (
 		Run:     render,
 		PreRun:  parseVariables,
 	}
-	showVersion bool
+	showVersion          bool
 	vars                 []string
 	csvs                 []string
 	eval                 string
@@ -70,7 +71,7 @@ func parseVariables(cmd *cobra.Command, args []string) {
 	for _, v := range csvs {
 		var (
 			csvBytes []byte
-			err error
+			err      error
 		)
 		key, csvFileName, err := splitVarParam(v)
 		if err != nil {
@@ -90,7 +91,8 @@ func parseVariables(cmd *cobra.Command, args []string) {
 				os.Exit(1)
 			}
 		}
-		templateCSVVariables[key], err = CSVToMap(csvBytes, ',')
+
+		templateCSVVariables[key], err = csvx.NewCSV(',', '#', true).ToMap(csvBytes)
 		if err != nil {
 			fmt.Fprint(cmd.OutOrStderr(), errors.Wrapf(err, "Could not parse CSV file %s", csvFileName))
 			os.Exit(1)
