@@ -14,7 +14,7 @@ builds:
       - darwin
     goarch:
       - amd64
-    binary: fcc
+    binary: gotmplx
 
 archives:
   - format: binary
@@ -22,7 +22,7 @@ archives:
 release:
   draft: true
   prerelease: auto
-  name_template: "fcc-{{.Tag}}"
+  name_template: "gotmplx-{{.Tag}}"
 
 checksum:
   disable: true
