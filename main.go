@@ -135,7 +135,7 @@ func parseVariables(cmd *cobra.Command, args []string) {
 		} else {
 			jsonBytes, err = ioutil.ReadFile(jsonFileName)
 			if err != nil {
-				fmt.Fprint(cmd.OutOrStderr(), errors.Wrapf(err, "Could not read CSV file %s", key))
+				fmt.Fprint(cmd.OutOrStderr(), errors.Wrapf(err, "Could not read JSON file %s", key))
 				os.Exit(1)
 			}
 		}
@@ -143,7 +143,7 @@ func parseVariables(cmd *cobra.Command, args []string) {
 		jsonMap := make(map[string]interface{})
 		err = json.Unmarshal(jsonBytes, &jsonMap)
 		if err != nil {
-			fmt.Fprint(cmd.OutOrStderr(), errors.Wrapf(err, "Could not parse CSV file %s", jsonFileName))
+			fmt.Fprint(cmd.OutOrStderr(), errors.Wrapf(err, "Could not parse JSON file %s", jsonFileName))
 			os.Exit(1)
 		}
 
