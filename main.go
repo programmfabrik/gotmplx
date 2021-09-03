@@ -17,19 +17,25 @@ import (
 
 	"github.com/Masterminds/sprig"
 	"github.com/pkg/errors"
+	"github.com/programmfabrik/go-csvx"
 	"github.com/spf13/cobra"
 )
 
 var (
+	version = "dev"
+	commit  = "none-commit"
+	date    = "2006-01-02 15:04:05Z07:00"
+	builtBy = "unknown"
+
 	rootCmd = &cobra.Command{
 		Use:     "gotmplx TEMPLATE [PARTIAL_TEMPLATE]*",
 		Short:   "gotmplx: Command line tool to render a go template",
-		Version: "1.0",
+		Version: fmt.Sprintf("%s %s %v %s", version, commit, date, builtBy),
 		Example: "gotmplx --var some=something --csv one=example/sample1.csv example/sample1.txt example/partial_tpl_1.txt",
 		Run:     render,
 		PreRun:  parseVariables,
 	}
-	showVersion bool
+	showVersion          bool
 	vars                 []string
 	csvs                 []string
 	eval                 string
@@ -70,7 +76,7 @@ func parseVariables(cmd *cobra.Command, args []string) {
 	for _, v := range csvs {
 		var (
 			csvBytes []byte
-			err error
+			err      error
 		)
 		key, csvFileName, err := splitVarParam(v)
 		if err != nil {
@@ -90,7 +96,15 @@ func parseVariables(cmd *cobra.Command, args []string) {
 				os.Exit(1)
 			}
 		}
-		templateCSVVariables[key], err = CSVToMap(csvBytes, ',')
+
+		csvp := csvx.CSVParser{
+			Comma:            ',',
+			Comment:          '#',
+			TrimLeadingSpace: true,
+			SkipEmptyColumns: true,
+		}
+
+		templateCSVVariables[key], err = csvp.Untyped(csvBytes)
 		if err != nil {
 			fmt.Fprint(cmd.OutOrStderr(), errors.Wrapf(err, "Could not parse CSV file %s", csvFileName))
 			os.Exit(1)
