@@ -8,6 +8,7 @@ package main
 // The gotmplx command wires up variables into a go template and renders it as output
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"io/ioutil"
@@ -29,19 +30,22 @@ var (
 		Run:     render,
 		PreRun:  parseVariables,
 	}
-	showVersion bool
-	vars                 []string
-	csvs                 []string
-	eval                 string
-	templateEnvVariables map[string]interface{}
-	templateVariables    map[string]interface{}
-	templateCSVVariables map[string][]map[string]interface{}
+	showVersion           bool
+	vars                  []string
+	csvs                  []string
+	jsons                 []string
+	eval                  string
+	templateEnvVariables  map[string]interface{}
+	templateVariables     map[string]interface{}
+	templateCSVVariables  map[string][]map[string]interface{}
+	templateJSONVariables map[string]map[string]interface{}
 )
 
 func init() {
 	rootCmd.Flags().BoolVarP(&showVersion, "version", "v", false, "Version of gotmplx")
 	rootCmd.Flags().StringArrayVarP(&vars, "var", "", []string{}, "Parse and use variable in template (--var myvar=value)")
 	rootCmd.Flags().StringArrayVarP(&csvs, "csv", "", []string{}, "Parse and use CSV file rows in template (--csv key=file)")
+	rootCmd.Flags().StringArrayVarP(&jsons, "json", "", []string{}, "Parse and use JSON file rows in template (--json key=file)")
 	rootCmd.Flags().StringVarP(&eval, "eval", "e", "", "Parse this text instead of file argument (--eval \"{{ .Var.myvar }}\"")
 }
 
@@ -70,7 +74,7 @@ func parseVariables(cmd *cobra.Command, args []string) {
 	for _, v := range csvs {
 		var (
 			csvBytes []byte
-			err error
+			err      error
 		)
 		key, csvFileName, err := splitVarParam(v)
 		if err != nil {
@@ -95,6 +99,41 @@ func parseVariables(cmd *cobra.Command, args []string) {
 			fmt.Fprint(cmd.OutOrStderr(), errors.Wrapf(err, "Could not parse CSV file %s", csvFileName))
 			os.Exit(1)
 		}
+	}
+
+	templateJSONVariables = make(map[string]map[string]interface{})
+	for _, v := range jsons {
+		var (
+			jsonBytes []byte
+			err       error
+		)
+		key, jsonFileName, err := splitVarParam(v)
+		if err != nil {
+			fmt.Fprint(cmd.OutOrStderr(), err)
+			os.Exit(1)
+		}
+		if jsonFileName == "-" {
+			jsonBytes, err = ioutil.ReadAll(cmd.InOrStdin())
+			if err != nil {
+				fmt.Fprint(cmd.OutOrStderr(), errors.Wrap(err, "Could not read stdin"))
+				os.Exit(1)
+			}
+		} else {
+			jsonBytes, err = ioutil.ReadFile(jsonFileName)
+			if err != nil {
+				fmt.Fprint(cmd.OutOrStderr(), errors.Wrapf(err, "Could not read CSV file %s", key))
+				os.Exit(1)
+			}
+		}
+
+		jsonMap := make(map[string]interface{})
+		err = json.Unmarshal(jsonBytes, &jsonMap)
+		if err != nil {
+			fmt.Fprint(cmd.OutOrStderr(), errors.Wrapf(err, "Could not parse CSV file %s", jsonFileName))
+			os.Exit(1)
+		}
+
+		templateJSONVariables[key] = jsonMap
 	}
 
 	templateVariables = make(map[string]interface{})
@@ -164,9 +203,10 @@ func render(cmd *cobra.Command, args []string) {
 	}
 
 	data := map[string]interface{}{
-		"Env": templateEnvVariables,
-		"Var": templateVariables,
-		"CSV": templateCSVVariables,
+		"Env":  templateEnvVariables,
+		"Var":  templateVariables,
+		"CSV":  templateCSVVariables,
+		"JSON": templateJSONVariables,
 	}
 
 	err = tpl.Execute(cmd.OutOrStdout(), data)
