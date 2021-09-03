@@ -97,7 +97,14 @@ func parseVariables(cmd *cobra.Command, args []string) {
 			}
 		}
 
-		templateCSVVariables[key], err = csvx.NewCSV(',', '#', true).ToMap(csvBytes)
+		csvp := csvx.CSVParser{
+			Comma:            ',',
+			Comment:          '#',
+			TrimLeadingSpace: true,
+			SkipEmptyColumns: true,
+		}
+
+		templateCSVVariables[key], err = csvp.Untyped(csvBytes)
 		if err != nil {
 			fmt.Fprint(cmd.OutOrStderr(), errors.Wrapf(err, "Could not parse CSV file %s", csvFileName))
 			os.Exit(1)
