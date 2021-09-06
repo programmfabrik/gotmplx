@@ -37,3 +37,5 @@ changelog:
       - '^ci:'
       - '^cd:'
       - '^ci/cd:'
+      - '^git:'
+      - '^goreleaser:'
