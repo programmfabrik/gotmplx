@@ -22,7 +22,7 @@ func TestValueParser_Unmarshal(t *testing.T) {
 		{
 			name: "test csv nil data",
 			fields: fields{
-				FormatType: FormatCSV,
+				FormatType: formatCSV,
 			},
 			args: args{
 				data: []byte(""),
@@ -33,7 +33,7 @@ func TestValueParser_Unmarshal(t *testing.T) {
 		{
 			name: "test csv with json data",
 			fields: fields{
-				FormatType: FormatCSV,
+				FormatType: formatCSV,
 			},
 			args: args{
 				data: []byte(`{"key":"hello","value":"world"}`),
@@ -44,7 +44,7 @@ func TestValueParser_Unmarshal(t *testing.T) {
 		{
 			name: "test csv with data",
 			fields: fields{
-				FormatType: FormatCSV,
+				FormatType: formatCSV,
 			},
 			args: args{
 				data: []byte(`key,value
@@ -62,7 +62,7 @@ func TestValueParser_Unmarshal(t *testing.T) {
 		{
 			name: "test json nil data",
 			fields: fields{
-				FormatType: FormatJSON,
+				FormatType: formatJSON,
 			},
 			args: args{
 				data: []byte(""),
@@ -73,7 +73,7 @@ func TestValueParser_Unmarshal(t *testing.T) {
 		{
 			name: "test json with csv data",
 			fields: fields{
-				FormatType: FormatJSON,
+				FormatType: formatJSON,
 			},
 			args: args{
 				data: []byte(`key,value
@@ -85,7 +85,7 @@ func TestValueParser_Unmarshal(t *testing.T) {
 		{
 			name: "test json with data",
 			fields: fields{
-				FormatType: FormatJSON,
+				FormatType: formatJSON,
 			},
 			args: args{
 				data: []byte(`{"key":"hello","value":"world"}`),
@@ -112,7 +112,7 @@ func TestValueParser_Unmarshal(t *testing.T) {
 		{
 			name: "unsupported format FormatVar",
 			fields: fields{
-				FormatType: FormatVar,
+				FormatType: formatVar,
 			},
 			args: args{
 				data: []byte(`{"key":"hello","value":"world"}`),
@@ -123,7 +123,7 @@ func TestValueParser_Unmarshal(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			parser := ValueParser{
+			parser := valueParser{
 				FormatType: tt.fields.FormatType,
 			}
 

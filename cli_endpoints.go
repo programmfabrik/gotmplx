@@ -13,25 +13,25 @@ import (
 
 func mainEntrypoint(c *cli.Context) error {
 	// extract csv data
-	varData, err := newCliIntWithStdinInputCh().extractData(c.StringSlice("var"), FormatVar)
+	varData, err := newCliIntWithStdinInputCh().extractData(c.StringSlice("var"), formatVar)
 	if err != nil {
 		return err
 	}
 
 	// extract csv data
-	csvData, err := newCliIntWithStdinInputCh().extractData(c.StringSlice("csv"), FormatCSV)
+	csvData, err := newCliIntWithStdinInputCh().extractData(c.StringSlice("csv"), formatCSV)
 	if err != nil {
 		return err
 	}
 
 	// extract json data
-	jsonData, err := newCliIntWithStdinInputCh().extractData(c.StringSlice("json"), FormatJSON)
+	jsonData, err := newCliIntWithStdinInputCh().extractData(c.StringSlice("json"), formatJSON)
 	if err != nil {
 		return err
 	}
 
 	// extract env data
-	envMap, err := newCliIntWithStdinInputCh().extractData(os.Environ(), FormatVar)
+	envMap, err := newCliIntWithStdinInputCh().extractData(os.Environ(), formatVar)
 	if err != nil {
 		return err
 	}
