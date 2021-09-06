@@ -1,0 +1,14 @@
+Var: 
+{{ .Var }}
+
+
+CSV: 
+{{ .CSV }}
+
+
+JSON: 
+{{ .JSON }}
+
+
+Env: 
+{{ .Env }}

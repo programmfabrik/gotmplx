@@ -14,13 +14,14 @@ go install github.com/programmfabrik/gotmplx
 
 ## Available flags and what they do
 
-| Short Flag | Flag  | Type     | Description |
-|------|-------------|----------|-------------|
-|      | `--csv`     | []string | Parse and use CSV file rows in template (--csv key=file) |
-| `-e` | `--eval`    | string   | Parse this text instead of file argument (--eval "{{ .Var.myvar }}" |
-| `-h` | `--help`    |          | Help for gotmplx |
-|      | `--var`     | []string | Parse and use variable in template (--var myvar=value) |
-| `-v` | `--version` |          | Version of gotmplx |
+| Short Flag | Flag        | Type     | Description |
+|------------|-------------|----------|-------------|
+| `-c`       | `--csv`     | []string | Parse and use CSV file rows in template (--csv key=file) |
+| `-j`       | `--json`    | []string | Parse and use JSON file rows in template (--json key=file) |
+| `-e`       | `--eval`    | string   | Parse this text instead of file argument (--eval "{{ .Var.myvar }}" |
+| `-h`       | `--help`    |          | Help for gotmplx |
+|            | `--var`     | []string | Parse and use variable in template (--var myvar=value) |
+| `-v`       | `--version` |          | Version of gotmplx |
 
 ## Examples
 
@@ -95,6 +96,12 @@ Result:
 Name: dummy
 ID: 10
 Shell: /bin/bash
+```
+
+### Combine everything together
+
+```bash
+go run . --csv "key=example/sample.input.csv"  --var "key=value" --json "key=example/sample.input.json" --json 'key2={"hello": "world"}' example/sample.tmplt.json
 ```
 
 ### Using custom template functions
