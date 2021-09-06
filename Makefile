@@ -1,8 +1,21 @@
 all: test build
 
-test:
+fmt:
+	go fmt ./...
+
+vet:
 	go vet ./...
-	go test ./...
+
+GOTESTOUTFILE?=cover.out
+
+test: fmt vet
+	go test -race -coverprofile=${GOTESTOUTFILE} ./...
+
+webtest: test
+	go tool cover -html=${GOTESTOUTFILE}
+
+functest: test
+	go tool cover -func=${GOTESTOUTFILE}
 
 example:
 	./example/run.sh
