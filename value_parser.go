@@ -15,21 +15,21 @@ var (
 type format string
 
 const (
-	FormatJSON format = "json"
-	FormatCSV  format = "csv"
-	FormatVar  format = "var"
+	formatJSON format = "json"
+	formatCSV  format = "csv"
+	formatVar  format = "var"
 )
 
-type ValueParser struct {
+type valueParser struct {
 	FormatType format
 }
 
 // Unmarshal unmarshals the data byte slice into the desired format.
-//   FormatJSON: returns a map[string]interface{}
-//   FormatCSV: returns a []map[string]interface{}
-func (v ValueParser) Unmarshal(data []byte) (interface{}, error) {
+//   formatJSON: returns a map[string]interface{}
+//   formatCSV: returns a []map[string]interface{}
+func (v valueParser) Unmarshal(data []byte) (interface{}, error) {
 	switch v.FormatType {
-	case FormatCSV:
+	case formatCSV:
 		csvp := csvx.CSVParser{
 			Comma:            ',',
 			Comment:          '#',
@@ -41,7 +41,7 @@ func (v ValueParser) Unmarshal(data []byte) (interface{}, error) {
 			return nil, fmt.Errorf("unable to parse bytes into CSV format: %w", err)
 		}
 		return csvData, nil
-	case FormatJSON:
+	case formatJSON:
 		jsonData := map[string]interface{}{}
 		err := json.Unmarshal(data, &jsonData)
 		if err != nil {
