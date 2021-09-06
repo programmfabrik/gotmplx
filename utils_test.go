@@ -1,7 +1,6 @@
 package main
 
 import (
-	"reflect"
 	"testing"
 )
 
@@ -56,49 +55,6 @@ func Test_splitVarParam(t *testing.T) {
 			}
 			if got1 != tt.want1 {
 				t.Errorf("splitVarParam() got1 = %v, want %v", got1, tt.want1)
-			}
-		})
-	}
-}
-
-func Test_sliceKeyValueToMap(t *testing.T) {
-	type args struct {
-		strSlc []string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    map[string]interface{}
-		wantErr bool
-	}{
-		{
-			name: "with key=value pair",
-			args: args{
-				strSlc: []string{"key=value"},
-			},
-			want: map[string]interface{}{
-				"key": "value",
-			},
-			wantErr: false,
-		},
-		{
-			name: "without key=value pair",
-			args: args{
-				strSlc: []string{"key"},
-			},
-			want:    nil,
-			wantErr: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := sliceKeyValueToMap(tt.args.strSlc)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("sliceKeyValueToMap() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("sliceKeyValueToMap() = %v, want %v", got, tt.want)
 			}
 		})
 	}
