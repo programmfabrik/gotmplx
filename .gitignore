@@ -3,3 +3,6 @@ _*
 
 .vscode
 dist/
+
+# skip test coverage files tracking
+*.out
