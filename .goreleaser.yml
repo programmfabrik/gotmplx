@@ -39,3 +39,4 @@ changelog:
       - '^ci/cd:'
       - '^git:'
       - '^goreleaser:'
+      - '^gomod:'
