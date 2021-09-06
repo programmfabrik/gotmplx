@@ -12,11 +12,11 @@ import (
 func Test_newCliIntWithStdinInputCh(t *testing.T) {
 	tests := []struct {
 		name string
-		want *cliInt
+		want *dataExtractor
 	}{
 		{
 			name: "success",
-			want: &cliInt{
+			want: &dataExtractor{
 				inputCh: os.Stdin,
 			},
 		},
@@ -60,7 +60,7 @@ func Test_cliInt_incrementStdinRef(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ci := &cliInt{
+			ci := &dataExtractor{
 				stdinRefCounter: tt.fields.stdinRefCounter,
 				inputCh:         tt.fields.inputCh,
 			}
@@ -108,7 +108,7 @@ func Test_cliInt_inputIndicatesStdinData(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ci := &cliInt{
+			ci := &dataExtractor{
 				stdinRefCounter: tt.fields.stdinRefCounter,
 				inputCh:         tt.fields.inputCh,
 			}
@@ -146,7 +146,7 @@ func Test_cliInt_extractData(t *testing.T) {
 			args: args{
 				cliStringSliceValue: []string{fmt.Sprintf("key=%s", `key,value
 				hello,world`)},
-				tformat: FormatCSV,
+				tformat: formatCSV,
 			},
 			want: map[string]interface{}{
 				"key": []map[string]interface{}{
@@ -167,7 +167,7 @@ func Test_cliInt_extractData(t *testing.T) {
 			},
 			args: args{
 				cliStringSliceValue: []string{"key=-"},
-				tformat:             FormatCSV,
+				tformat:             formatCSV,
 			},
 			want: map[string]interface{}{
 				"key": []map[string]interface{}{
@@ -209,7 +209,7 @@ func Test_cliInt_extractData(t *testing.T) {
 			},
 			args: args{
 				cliStringSliceValue: []string{"key=sample.json"},
-				tformat:             FormatCSV,
+				tformat:             formatCSV,
 			},
 			want: map[string]interface{}{
 				"key": []map[string]interface{}{
@@ -230,7 +230,7 @@ func Test_cliInt_extractData(t *testing.T) {
 			},
 			args: args{
 				cliStringSliceValue: []string{"key=-"},
-				tformat:             FormatCSV,
+				tformat:             formatCSV,
 			},
 			want:    nil,
 			wantErr: true,
@@ -244,7 +244,7 @@ func Test_cliInt_extractData(t *testing.T) {
 			},
 			args: args{
 				cliStringSliceValue: []string{"key=value"},
-				tformat:             FormatVar,
+				tformat:             formatVar,
 			},
 			want: map[string]interface{}{
 				"key": "value",
@@ -259,7 +259,7 @@ func Test_cliInt_extractData(t *testing.T) {
 			},
 			args: args{
 				cliStringSliceValue: []string{"key"},
-				tformat:             FormatVar,
+				tformat:             formatVar,
 			},
 			want:    nil,
 			wantErr: true,
@@ -267,7 +267,7 @@ func Test_cliInt_extractData(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ci := &cliInt{
+			ci := &dataExtractor{
 				stdinRefCounter: tt.fields.stdinRefCounter,
 				inputCh:         tt.fields.inputCh,
 			}

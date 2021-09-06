@@ -14,21 +14,21 @@ var (
 	ErrUnableToIncrementStdinRefCounter = errors.New("unable to increment stdin reference counter. Counter already increased")
 )
 
-type cliInt struct {
+type dataExtractor struct {
 	stdinRefCounter uint8
 	inputCh         io.Reader
 }
 
 // newCliIntWithStdinInputCh initializes the inputCh with the os.Stdin channel
-func newCliIntWithStdinInputCh() *cliInt {
-	return &cliInt{
+func newCliIntWithStdinInputCh() *dataExtractor {
+	return &dataExtractor{
 		inputCh: os.Stdin,
 	}
 }
 
 // incrementStdinRef checks if the stdinRefCounter is set to 0 and increments the counter by one.
 // If stdinRefCounter is at this point > 1 an error is returned
-func (ci *cliInt) incrementStdinRef() error {
+func (ci *dataExtractor) incrementStdinRef() error {
 	if ci.stdinRefCounter > 0 {
 		return ErrUnableToIncrementStdinRefCounter
 	}
@@ -37,7 +37,7 @@ func (ci *cliInt) incrementStdinRef() error {
 }
 
 // inputIndicatesStdinData checks if input matches -
-func (ci *cliInt) inputIndicatesStdinData(input string) bool {
+func (ci *dataExtractor) inputIndicatesStdinData(input string) bool {
 	if input != "-" {
 		return false
 	}
@@ -50,7 +50,7 @@ func (ci *cliInt) inputIndicatesStdinData(input string) bool {
 //   * stdin
 //
 // The "tformat" parameter defines the parser we should use to extract the data.
-func (ci *cliInt) extractData(inputStrSlice []string, tformat format) (map[string]interface{}, error) {
+func (ci *dataExtractor) extractData(inputStrSlice []string, tformat format) (map[string]interface{}, error) {
 	retData := make(map[string]interface{})
 	for _, data := range inputStrSlice {
 		key, value, err := splitVarParam(data)
@@ -59,7 +59,7 @@ func (ci *cliInt) extractData(inputStrSlice []string, tformat format) (map[strin
 		}
 
 		// check if format is of type var
-		if tformat == FormatVar {
+		if tformat == formatVar {
 			retData[key] = value
 			continue
 		}
@@ -93,7 +93,7 @@ func (ci *cliInt) extractData(inputStrSlice []string, tformat format) (map[strin
 			bts = []byte(value)
 		}
 
-		parser := ValueParser{
+		parser := valueParser{
 			FormatType: tformat,
 		}
 
