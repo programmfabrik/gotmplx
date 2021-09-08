@@ -12,7 +12,7 @@ type sourceReader interface {
 	// Unmarshal unmarshals bts to the desired format
 	Unmarshal(bts []byte) (interface{}, error)
 	// IsFile checks whether str contains the file ending
-	IsFile(str string) (bool, error)
+	IsFile(str string) bool
 }
 
 // readData checks if inputStrSlice provides key=value pairs and validates them using the following input techniques:
@@ -31,12 +31,7 @@ func readData(inputStrSlice []string, sr sourceReader) (map[string]interface{}, 
 		}
 
 		byteData := []byte{}
-		match, err := sr.IsFile(value)
-		if err != nil {
-			return nil, err
-		}
-
-		if match {
+		if sr.IsFile(value) {
 			byteData, err = ioutil.ReadFile(value)
 			if err != nil {
 				return nil, err

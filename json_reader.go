@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"regexp"
+	"strings"
 )
 
 // jsonReader implements the sourceReader interface.
@@ -21,6 +21,6 @@ func (*jsonReader) Unmarshal(bts []byte) (interface{}, error) {
 
 // IsFile checks whether str ends with .json.
 // IsFile implements the sourceReader interface.
-func (*jsonReader) IsFile(str string) (bool, error) {
-	return regexp.MatchString("(.json)$", str)
+func (*jsonReader) IsFile(str string) bool {
+	return strings.HasSuffix(str, ".json")
 }

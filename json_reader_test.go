@@ -124,11 +124,10 @@ func Test_jsonReader_IsFile(t *testing.T) {
 		str string
 	}
 	tests := []struct {
-		name    string
-		j       *jsonReader
-		args    args
-		want    bool
-		wantErr bool
+		name string
+		j    *jsonReader
+		args args
+		want bool
 	}{
 		{
 			name: "json extension",
@@ -136,8 +135,7 @@ func Test_jsonReader_IsFile(t *testing.T) {
 			args: args{
 				str: "file.json",
 			},
-			want:    true,
-			wantErr: false,
+			want: true,
 		},
 		{
 			name: "js extension",
@@ -145,8 +143,7 @@ func Test_jsonReader_IsFile(t *testing.T) {
 			args: args{
 				str: "file.js",
 			},
-			want:    false,
-			wantErr: false,
+			want: false,
 		},
 		{
 			name: "empty string",
@@ -154,18 +151,12 @@ func Test_jsonReader_IsFile(t *testing.T) {
 			args: args{
 				str: "",
 			},
-			want:    false,
-			wantErr: false,
+			want: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			j := &jsonReader{}
-			got, err := j.IsFile(tt.args.str)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("jsonReader.IsFile() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
+			got := tt.j.IsFile(tt.args.str)
 			if got != tt.want {
 				t.Errorf("jsonReader.IsFile() = %v, want %v", got, tt.want)
 			}

@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"regexp"
+	"strings"
 
 	"github.com/programmfabrik/go-csvx"
 )
@@ -28,6 +28,6 @@ func (*csvReader) Unmarshal(bts []byte) (interface{}, error) {
 
 // IsFile checks whether str ends with .csv.
 // IsFile implements the sourceReader interface.
-func (*csvReader) IsFile(str string) (bool, error) {
-	return regexp.MatchString("(.csv)$", str)
+func (*csvReader) IsFile(str string) bool {
+	return strings.HasSuffix(str, ".csv")
 }

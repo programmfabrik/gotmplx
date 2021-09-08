@@ -91,22 +91,39 @@ func Test_csvReader_IsFile(t *testing.T) {
 		str string
 	}
 	tests := []struct {
-		name    string
-		c       *csvReader
-		args    args
-		want    bool
-		wantErr bool
+		name string
+		c    *csvReader
+		args args
+		want bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "csv extension",
+			c:    &csvReader{},
+			args: args{
+				str: "file.csv",
+			},
+			want: true,
+		},
+		{
+			name: "cs extension",
+			c:    &csvReader{},
+			args: args{
+				str: "file.cs",
+			},
+			want: false,
+		},
+		{
+			name: "empty string",
+			c:    &csvReader{},
+			args: args{
+				str: "",
+			},
+			want: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &csvReader{}
-			got, err := c.IsFile(tt.args.str)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("csvReader.IsFile() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
+			got := tt.c.IsFile(tt.args.str)
 			if got != tt.want {
 				t.Errorf("csvReader.IsFile() = %v, want %v", got, tt.want)
 			}
