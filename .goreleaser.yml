@@ -40,3 +40,4 @@ changelog:
       - '^git:'
       - '^goreleaser:'
       - '^gomod:'
+      - '^Merge branch '
