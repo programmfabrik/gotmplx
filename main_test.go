@@ -97,11 +97,13 @@ FALSE,unib-heidelberg,fylr-unib-heidelberg,https://unib-heidelberg.fylr.dev
 FALSE,leon-testing,fylr-leon-testing,https://leon-testing.fylr.dev
 `
 
-var tFolder string 
+var tFolder string
+
 func TestMain(t *testing.T) {
-    tFolder = t.TempDir()
-    t.Run("one", testTemplateEval)
-    t.Run("two", testTemplateEvalCSVStdIn)
+	tFolder = t.TempDir()
+	t.Run("one", testTemplateEval)
+	t.Run("two", testTemplateEvalCSVStdIn)
+	t.Run("three", testTemplateDelimiters)
 }
 
 func testTemplateEval(t *testing.T) {
@@ -110,24 +112,24 @@ func testTemplateEval(t *testing.T) {
 	err := ioutil.WriteFile(csvFilePath, []byte(inputSampleCSV), 0644)
 	if err != nil {
 		t.Fatal(err)
-    }
-    
-    tpl1FilePath := filepath.Join(tFolder, "partial1.txt")
+	}
+
+	tpl1FilePath := filepath.Join(tFolder, "partial1.txt")
 	err = ioutil.WriteFile(tpl1FilePath, []byte(inputSamplePartialTmpl), 0644)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-    inBuf := bytes.NewBufferString(inputSampleCSV)
-    rootCmd.SetIn(inBuf)
+	inBuf := bytes.NewBufferString(inputSampleCSV)
+	rootCmd.SetIn(inBuf)
 	outBuf := bytes.NewBufferString("")
 	rootCmd.SetOut(outBuf)
 	rootCmd.SetArgs([]string{
 		"--eval", inputSampleTmpl,
 		"--var", "some=something",
-        "--var", "moar=more=data",
-        "--csv", fmt.Sprintf("one=%s", csvFilePath),
-        tpl1FilePath,
+		"--var", "moar=more=data",
+		"--csv", fmt.Sprintf("one=%s", csvFilePath),
+		tpl1FilePath,
 	})
 
 	// Clear / set env
@@ -146,27 +148,27 @@ func testTemplateEval(t *testing.T) {
 	}
 	if string(out) != outputSampleText {
 		t.Fatalf("Expected:\n%s\nGot:\n%s", outputSampleText, string(out))
-    }
+	}
 }
 
 func testTemplateEvalCSVStdIn(t *testing.T) {
 
-    tpl1FilePath := filepath.Join(tFolder, "partial1.txt")
+	tpl1FilePath := filepath.Join(tFolder, "partial1.txt")
 	err := ioutil.WriteFile(tpl1FilePath, []byte(inputSamplePartialTmpl), 0644)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-    inBuf := bytes.NewBufferString(inputSampleCSV)
-    rootCmd.SetIn(inBuf)
+	inBuf := bytes.NewBufferString(inputSampleCSV)
+	rootCmd.SetIn(inBuf)
 	outBuf := bytes.NewBufferString("")
 	rootCmd.SetOut(outBuf)
 	rootCmd.SetArgs([]string{
 		"--eval", inputSampleTmpl,
 		"--var", "some=something",
-        "--var", "moar=more=data",
-        "--csv", "one=-",
-        tpl1FilePath,
+		"--var", "moar=more=data",
+		"--csv", "one=-",
+		tpl1FilePath,
 	})
 
 	// Clear / set env
@@ -185,5 +187,60 @@ func testTemplateEvalCSVStdIn(t *testing.T) {
 	}
 	if string(out) != outputSampleText {
 		t.Fatalf("Expected:\n%s\nGot:\n%s", outputSampleText, string(out))
+	}
+}
+
+func testTemplateDelimiters(t *testing.T) {
+
+	inputTmpl := `
+Environment
+%%- range $k, $v := .Env %%
+    Env %% $k %% => %% $v %%
+%%- end %%
+Variables
+%%- range $k, $v := .Var %%
+    Var %% $k %% => %% $v %%
+%%- end %%
+`
+
+	outputText := `
+Environment
+    Env env1 => val1
+    Env env2 => val2
+Variables
+    Var moar => more=data
+    Var some => something
+`
+
+	csvs = nil
+	outBuf := bytes.NewBufferString("")
+	rootCmd.SetOut(outBuf)
+	rootCmd.SetArgs([]string{
+		"--template-delim-left", "%%",
+		"--template-delim-right", "%%",
+		"--eval", inputTmpl,
+		"--var", "some=something",
+		"--var", "moar=more=data",
+	})
+
+	os.Clearenv()
+	err := os.Setenv("env1", "val1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = os.Setenv("env2", "val2")
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = rootCmd.Execute()
+	if err != nil {
+		t.Fatal(err)
+	}
+	out, err := ioutil.ReadAll(outBuf)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(out) != outputText {
+		t.Fatalf("\nGot:\n%s\nExpected:\n%s", string(out), outputText)
 	}
 }
