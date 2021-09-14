@@ -20,6 +20,8 @@ go install github.com/programmfabrik/gotmplx
 | `-e` | `--eval`    | string   | Parse this text instead of file argument (--eval "{{ .Var.myvar }}" |
 | `-h` | `--help`    |          | Help for gotmplx |
 |      | `--var`     | []string | Parse and use variable in template (--var myvar=value) |
+|      | `-template-delim-left`    | string   | Use this string as go template left delimiter |
+|      | `-template-delim-left`     | string   | Use this string as go template right delimiter |
 | `-v` | `--version` |          | Version of gotmplx |
 
 ## Examples

@@ -1,3 +1,4 @@
+//go:build go1.15
 // +build go1.15
 
 package main
@@ -42,6 +43,8 @@ var (
 	templateEnvVariables map[string]interface{}
 	templateVariables    map[string]interface{}
 	templateCSVVariables map[string][]map[string]interface{}
+	templateDelimLeft    string
+	templateDelimRight   string
 )
 
 func init() {
@@ -49,6 +52,8 @@ func init() {
 	rootCmd.Flags().StringArrayVarP(&vars, "var", "", []string{}, "Parse and use variable in template (--var myvar=value)")
 	rootCmd.Flags().StringArrayVarP(&csvs, "csv", "", []string{}, "Parse and use CSV file rows in template (--csv key=file)")
 	rootCmd.Flags().StringVarP(&eval, "eval", "e", "", "Parse this text instead of file argument (--eval \"{{ .Var.myvar }}\"")
+	rootCmd.Flags().StringVarP(&templateDelimLeft, "template-delim-left", "", "", "Use this as left delimiter in go templates")
+	rootCmd.Flags().StringVarP(&templateDelimRight, "template-delim-right", "", "", "Use this as right delimiter in go templates")
 }
 
 func main() {
@@ -104,7 +109,7 @@ func parseVariables(cmd *cobra.Command, args []string) {
 			SkipEmptyColumns: true,
 		}
 
-		templateCSVVariables[key], err = csvp.Untyped(csvBytes)
+		templateCSVVariables[key], err = csvp.Typed(csvBytes)
 		if err != nil {
 			fmt.Fprint(cmd.OutOrStderr(), errors.Wrapf(err, "Could not parse CSV file %s", csvFileName))
 			os.Exit(1)
@@ -136,6 +141,7 @@ func render(cmd *cobra.Command, args []string) {
 
 	if eval != "" {
 		tpl = template.New("eval").Funcs(sprig.FuncMap())
+		tpl = tpl.Delims(templateDelimLeft, templateDelimRight)
 		tpl, err = tpl.Parse(eval)
 		if err != nil {
 			fmt.Fprint(cmd.OutOrStderr(), errors.Wrapf(err, "Could not parse inline template `%s`", eval))
@@ -157,6 +163,7 @@ func render(cmd *cobra.Command, args []string) {
 				fmt.Fprint(cmd.OutOrStderr(), errors.Wrap(err, "Could not read stdin"))
 				os.Exit(1)
 			}
+			t = t.Delims(templateDelimLeft, templateDelimRight)
 			_, err = t.Parse(string(stdInBytes))
 			if err != nil {
 				fmt.Fprint(cmd.OutOrStderr(), errors.Wrapf(err, "Could not parse template from stdin: %s", string(stdInBytes)))
@@ -169,6 +176,7 @@ func render(cmd *cobra.Command, args []string) {
 			} else {
 				t = tpl.New(filepath.Base(arg))
 			}
+			t = t.Delims(templateDelimLeft, templateDelimRight)
 			_, err = t.ParseFiles(arg)
 			if err != nil {
 				fmt.Fprint(cmd.OutOrStderr(), errors.Wrapf(err, "Could not parse template file %s", arg))
