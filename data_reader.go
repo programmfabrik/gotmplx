@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"strings"
 )
 
 type sourceReader interface {
@@ -22,7 +21,6 @@ type sourceReader interface {
 //
 // The "tformat" parameter defines the parser we should use to extract the data.
 func readData(inputStrSlice []string, sr sourceReader) (map[string]interface{}, error) {
-	inputCh := os.Stdin
 	retData := make(map[string]interface{})
 	for _, data := range inputStrSlice {
 		key, value, err := splitVarParam(data)
@@ -36,12 +34,13 @@ func readData(inputStrSlice []string, sr sourceReader) (map[string]interface{}, 
 			if err != nil {
 				return nil, err
 			}
-		} else if strings.ContainsRune(value, '-') {
+		} else if value == "-" {
 			// data from stdin
-			byteData, err = ioutil.ReadAll(inputCh)
+			stdinData, err := ioutil.ReadAll(os.Stdin)
 			if err != nil {
 				return nil, fmt.Errorf("unable read stdin data: %w", err)
 			}
+			byteData = stdinData
 		} else {
 			// inline data
 			byteData = []byte(value)

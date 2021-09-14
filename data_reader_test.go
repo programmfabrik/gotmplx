@@ -38,6 +38,23 @@ func Test_readData(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "csv inline input with - in value",
+			args: args{
+				inputStrSlice: []string{fmt.Sprintf("key=%s", `key,value
+				hello-foo,world`)},
+				sr: &csvReader{},
+			},
+			want: map[string]interface{}{
+				"key": []map[string]interface{}{
+					{
+						"key":   "hello-foo",
+						"value": "world",
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
 			name: "csv stdin input",
 			args: args{
 				inputStrSlice: []string{"key=-"},

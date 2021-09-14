@@ -11,7 +11,7 @@ type jsonReader struct{}
 // Unmarshal decodes the byte slice into a go readable format.
 // Unmarshal implements the sourceReader interface.
 func (*jsonReader) Unmarshal(bts []byte) (interface{}, error) {
-	jsonData := map[string]interface{}{}
+	var jsonData interface{}
 	err := json.Unmarshal(bts, &jsonData)
 	if err != nil {
 		return nil, err
