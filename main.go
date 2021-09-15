@@ -45,6 +45,14 @@ func main() {
 				Usage:   "Parse this text instead of file argument (--eval \"{{ .Var.myvar }}\"",
 				Aliases: []string{"e"},
 			},
+			&cli2.StringFlag{
+				Name:  "template-delim-left",
+				Usage: "Use this as left delimiter in go templates",
+			},
+			&cli2.StringFlag{
+				Name:  "template-delim-right",
+				Usage: "Use this as right delimiter in go templates",
+			},
 		},
 		Action: mainEntrypoint,
 	}

@@ -14,14 +14,16 @@ go install github.com/programmfabrik/gotmplx
 
 ## Available flags and what they do
 
-| Short Flag | Flag        | Type     | Description |
-|------------|-------------|----------|-------------|
-| `-c`       | `--csv`     | []string | Parse and use CSV file rows in template (--csv key=file) |
-| `-j`       | `--json`    | []string | Parse and use JSON file rows in template (--json key=file) |
-| `-e`       | `--eval`    | string   | Parse this text instead of file argument (--eval "{{ .Var.myvar }}" |
-| `-h`       | `--help`    |          | Help for gotmplx |
-|            | `--var`     | []string | Parse and use variable in template (--var myvar=value) |
-| `-v`       | `--version` |          | Version of gotmplx |
+| Short Flag | Flag                    | Type     | Description                                                         |
+|------------|-------------------------|----------|---------------------------------------------------------------------|
+| `-c`       | `--csv`                 | []string | Parse and use CSV file rows in template (--csv key=file)            |
+| `-j`       | `--json`                | []string | Parse and use JSON file rows in template (--json key=file)          |
+| `-e`       | `--eval`                | string   | Parse this text instead of file argument (--eval "{{ .Var.myvar }}" |
+| `-h`       | `--help`                |          | Help for gotmplx                                                    |
+|            | `--var`                 | []string | Parse and use variable in template (--var myvar=value)              |
+|            | `--template-delim-left` | string   | Use this string as go template left delimiter                       |
+|            | `--template-delim-left` | string   | Use this string as go template right delimiter                      |
+| `-v`       | `--version`             |          | Version of gotmplx                                                  |
 
 ## Examples
 

@@ -60,7 +60,10 @@ func mainEntrypoint(c *cli.Context) error {
 		templateData = string(fBytes)
 	}
 
-	tmplt, err := template.New("stdin").Funcs(sprig.FuncMap()).Parse(templateData)
+	tmplt, err := template.New("stdin").
+		Funcs(sprig.FuncMap()).
+		Delims(c.String("template-delim-left"), c.String("template-delim-right")).
+		Parse(templateData)
 	if err != nil {
 		return err
 	}
