@@ -17,6 +17,7 @@ require (
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/programmfabrik/go-csvx v1.1.0
+	github.com/programmfabrik/go-lib v0.0.0-20210901081401-6dcb1c166a3d // indirect
 	github.com/stretchr/testify v1.7.0 // indirect
 	github.com/urfave/cli/v2 v2.3.0
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5 // indirect

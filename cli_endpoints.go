@@ -8,16 +8,11 @@ import (
 	"os"
 
 	"github.com/Masterminds/sprig"
+	golib "github.com/programmfabrik/go-lib"
 	"github.com/urfave/cli/v2"
 )
 
 func mainEntrypoint(c *cli.Context) error {
-	// extract csv data
-	varData, err := stringSliceToMap(c.StringSlice("var"))
-	if err != nil {
-		return err
-	}
-
 	// extract csv data
 	csvData, err := readData(c.StringSlice("csv"), &csvReader{})
 	if err != nil {
@@ -30,17 +25,11 @@ func mainEntrypoint(c *cli.Context) error {
 		return err
 	}
 
-	// extract env data
-	envMap, err := stringSliceToMap(os.Environ())
-	if err != nil {
-		return err
-	}
-
 	templateVals := map[string]interface{}{
-		"Var":  varData,
+		"Var":  golib.MapValues(c.StringSlice("var"), ""),
+		"Env":  golib.MapValues(os.Environ(), ""),
 		"CSV":  csvData,
 		"JSON": jsonData,
-		"Env":  envMap,
 	}
 
 	// read template data

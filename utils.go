@@ -38,19 +38,3 @@ func readStdinData() ([]byte, error) {
 	}
 	return nil, nil
 }
-
-// stringSliceToMap extracts key=value pairs from the string slice and writes them as key=value pair to the map
-func stringSliceToMap(strs []string) (map[string]string, error) {
-	if len(strs) < 1 {
-		return nil, errors.New("need at least one key=value pair")
-	}
-	rslt := map[string]string{}
-	for _, idxValue := range strs {
-		key, value, err := splitVarParam(idxValue)
-		if err != nil {
-			return nil, err
-		}
-		rslt[key] = value
-	}
-	return rslt, nil
-}
