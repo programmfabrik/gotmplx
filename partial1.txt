@@ -1,0 +1,7 @@
+
+{{ define "partial_1" }}
+Environment
+{{- range $k, $v := .Env }}
+    Env {{ $k }} => {{ $v }}
+{{- end }}
+{{- end }}

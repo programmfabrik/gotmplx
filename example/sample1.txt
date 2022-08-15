@@ -3,7 +3,7 @@ Sample template START
 Variables
 {{- range $k, $v := .Var }}
     Var {{ $k }} => {{ $v }}
-{{- end }} 
+{{- end }}
 CSV data
 {{- range $k, $v := .CSV }}
     CSV {{ $k }}
@@ -11,7 +11,7 @@ CSV data
         Row {{ $i }}
         {{- range $k3, $v3 := $v2 }}
             Field {{ $k3 }} => {{ $v3 }}
-        {{- end }}         
-    {{- end }} 
-{{- end }} 
+        {{- end }}
+    {{- end }}
+{{- end }}
 Sample template END

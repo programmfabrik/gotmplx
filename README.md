@@ -14,22 +14,25 @@ go install github.com/programmfabrik/gotmplx
 
 ## Available flags and what they do
 
-| Short Flag | Flag  | Type     | Description |
-|------|-------------|----------|-------------|
-|      | `--csv`     | []string | Parse and use CSV file rows in template (--csv key=file) |
-| `-e` | `--eval`    | string   | Parse this text instead of file argument (--eval "{{ .Var.myvar }}" |
-| `-h` | `--help`    |          | Help for gotmplx |
-|      | `--var`     | []string | Parse and use variable in template (--var myvar=value) |
-|      | `-template-delim-left`    | string   | Use this string as go template left delimiter |
-|      | `-template-delim-left`     | string   | Use this string as go template right delimiter |
-| `-v` | `--version` |          | Version of gotmplx |
+| Short| Flag                     | Type     | Description |
+|------|--------------------------|----------|-------------|
+|      | `--csv`                  | []string | Parse and use csv file rows in template (--csv key=file) |
+|      | `--yml`                  | []string | Parse and use yml file in template (--yml key=file) |
+|      | `--json`                 | []string | Parse and use json file in template (--json key=file) |
+|      | `--dump`                 | bool     | Dump parsed data which is passed to template. |
+|      | `--html`                 | bool     | Render template as HTML, defaults to text rendering. |
+| `-e` | `--eval`                 | string   | Parse this text instead of file argument (--eval "{{ .Var.myvar }}" |
+| `-h` | `--help`                 |          | Help for gotmplx |
+|      | `--var`                  | []string | Parse and use variable in template (--var myvar=value) |
+| `-l` | `-template-delim-left`   | string   | Use this string as go template left delimiter |
+| `-r` | `-template-delim-right`  | string   | Use this string as go template right delimiter |
 
 ## Examples
 
 ### Inject cli flag value into the template
 
 ```bash
-./gotmplx --var "key=value" --eval "My key value: {{.Var.key}}"
+./gotmplx --var "key=value" --eval "My key value: {{.var.key}}"
 ```
 
 Result:
@@ -50,7 +53,7 @@ EOF
 ```
 
 ```bash
-./gotmplx --csv "mycsvfile=test.csv" --eval "My csv value: {{.CSV.mycsvfile}}"
+./gotmplx --csv "mycsvfile=test.csv" --eval "My csv value: {{.csv.mycsvfile}}"
 ```
 
 Result:
@@ -64,7 +67,7 @@ My csv value: [map[id:10 name:henk]]
 Since gotmplx injects the environment into the `.Env` key, you can access any environment variable from a template.
 
 ```bash
-./gotmplx --eval "My shell: {{.Env.SHELL}}"
+./gotmplx --eval "My shell: {{.env.SHELL}}"
 ```
 
 Result:

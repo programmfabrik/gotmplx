@@ -1,6 +1,6 @@
 module github.com/programmfabrik/gotmplx
 
-go 1.16
+go 1.19
 
 require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
@@ -31,4 +31,5 @@ require (
 	go.etcd.io/bbolt v1.3.2 // indirect
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5 // indirect
 	gopkg.in/resty.v1 v1.12.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

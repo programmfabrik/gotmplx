@@ -9,17 +9,20 @@ package main
 // The gotmplx command wires up variables into a go template and renders it as output
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"io/ioutil"
+	"log"
 	"os"
-	"path/filepath"
 	"strings"
+	ttemplate "text/template"
 
 	"github.com/Masterminds/sprig"
-	"github.com/pkg/errors"
 	"github.com/programmfabrik/go-csvx"
 	"github.com/spf13/cobra"
+	"github.com/yudai/pp"
+	"gopkg.in/yaml.v3"
 )
 
 var (
@@ -36,24 +39,31 @@ var (
 		Run:     render,
 		PreRun:  parseVariables,
 	}
-	showVersion          bool
-	vars                 []string
-	csvs                 []string
-	eval                 string
-	templateEnvVariables map[string]interface{}
-	templateVariables    map[string]interface{}
-	templateCSVVariables map[string][]map[string]interface{}
-	templateDelimLeft    string
-	templateDelimRight   string
+	vars, csvs, ymls, jsons   []string
+	eval                      string
+	templateEnvVariables      map[string]any
+	templateVariables         map[string]any
+	templateCSVVariables      map[string][]map[string]any
+	templateYML, templateJSON map[string]any
+
+	dump, html bool
+
+	templateDelimLeft  string
+	templateDelimRight string
+	stdinBytes         []byte
 )
 
 func init() {
-	rootCmd.Flags().BoolVarP(&showVersion, "version", "v", false, "Version of gotmplx")
 	rootCmd.Flags().StringArrayVarP(&vars, "var", "", []string{}, "Parse and use variable in template (--var myvar=value)")
 	rootCmd.Flags().StringArrayVarP(&csvs, "csv", "", []string{}, "Parse and use CSV file rows in template (--csv key=file)")
+	rootCmd.Flags().StringArrayVarP(&ymls, "yml", "", []string{}, "Parse and use YML file in template (--yml key=file)")
+	rootCmd.Flags().StringArrayVarP(&jsons, "json", "", []string{}, "Parse and use JSON file in template (--json key=file)")
+
+	rootCmd.Flags().BoolVarP(&dump, "dump", "d", false, "Pretty print data passed to template to stdout")
+	rootCmd.Flags().BoolVarP(&html, "html", "", false, "Render template as HTML (default is TEXT)")
 	rootCmd.Flags().StringVarP(&eval, "eval", "e", "", "Parse this text instead of file argument (--eval \"{{ .Var.myvar }}\"")
-	rootCmd.Flags().StringVarP(&templateDelimLeft, "template-delim-left", "", "", "Use this as left delimiter in go templates")
-	rootCmd.Flags().StringVarP(&templateDelimRight, "template-delim-right", "", "", "Use this as right delimiter in go templates")
+	rootCmd.Flags().StringVarP(&templateDelimLeft, "template-delim-left", "l", "", "Use this as left delimiter in go templates")
+	rootCmd.Flags().StringVarP(&templateDelimRight, "template-delim-right", "r", "", "Use this as right delimiter in go templates")
 }
 
 func main() {
@@ -64,41 +74,98 @@ func main() {
 	}
 }
 
+// stdin reads all bytes from stdin. if called more than once, the stdin bytes
+// from the first call are returns
+func stdin() []byte {
+	if stdinBytes == nil {
+		var err error
+		stdinBytes, err = ioutil.ReadAll(os.Stdin)
+		if err != nil {
+			log.Fatalf("Could not read stdin: %s", err.Error())
+		}
+	}
+	return stdinBytes
+}
+
 func parseVariables(cmd *cobra.Command, args []string) {
 
 	envStr := os.Environ()
-	templateEnvVariables = make(map[string]interface{})
+	templateEnvVariables = map[string]any{}
 	for _, v := range envStr {
-		key, value, err := splitVarParam(v)
-		if err != nil {
-			fmt.Fprint(cmd.OutOrStderr(), err)
-			os.Exit(1)
+		key, value, ok := strings.Cut(v, "=")
+		if ok {
+			templateEnvVariables[key] = value
 		}
-		templateEnvVariables[key] = value
 	}
 
-	templateCSVVariables = make(map[string][]map[string]interface{})
+	templateYML = map[string]any{}
+	for _, y := range ymls {
+		var (
+			ymlBytes []byte
+			err      error
+		)
+		key, ymlFileName, ok := strings.Cut(y, "=")
+		if !ok {
+			log.Fatalf("Unable to split yml file %q", y)
+		}
+		if ymlFileName == "-" {
+			ymlBytes = stdin()
+		} else {
+			ymlBytes, err = ioutil.ReadFile(ymlFileName)
+			if err != nil {
+				log.Fatalf("Could not read yml file %q: %s", key, err.Error())
+			}
+		}
+		var d any
+		err = yaml.Unmarshal(ymlBytes, &d)
+		if err != nil {
+			log.Fatalf("Could not parse yml file %q: %s", ymlFileName, err.Error())
+		}
+		templateYML[key] = d
+	}
+
+	templateJSON = map[string]any{}
+	for _, j := range jsons {
+		var (
+			jsonBytes []byte
+			err       error
+		)
+		key, jsonFileName, ok := strings.Cut(j, "=")
+		if !ok {
+			log.Fatalf("Unable to split json file %q", j)
+		}
+		if jsonFileName == "-" {
+			jsonBytes = stdin()
+		} else {
+			jsonBytes, err = ioutil.ReadFile(jsonFileName)
+			if err != nil {
+				log.Fatalf("Could not read json file %q: %s", key, err.Error())
+			}
+		}
+		var d any
+		err = json.Unmarshal(jsonBytes, &d)
+		if err != nil {
+			log.Fatalf("Could not parse json file %q: %s", jsonFileName, err.Error())
+		}
+		templateJSON[key] = d
+	}
+
+	templateCSVVariables = map[string][]map[string]any{}
 	for _, v := range csvs {
 		var (
 			csvBytes []byte
 			err      error
 		)
-		key, csvFileName, err := splitVarParam(v)
-		if err != nil {
-			fmt.Fprint(cmd.OutOrStderr(), err)
-			os.Exit(1)
+		key, csvFileName, ok := strings.Cut(v, "=")
+		if !ok {
+			log.Fatalf("Unable to split csv file %q", v)
 		}
 		if csvFileName == "-" {
-			csvBytes, err = ioutil.ReadAll(cmd.InOrStdin())
-			if err != nil {
-				fmt.Fprint(cmd.OutOrStderr(), errors.Wrap(err, "Could not read stdin"))
-				os.Exit(1)
-			}
+			csvBytes = stdin()
 		} else {
 			csvBytes, err = ioutil.ReadFile(csvFileName)
 			if err != nil {
-				fmt.Fprint(cmd.OutOrStderr(), errors.Wrapf(err, "Could not read CSV file %s", key))
-				os.Exit(1)
+				log.Fatalf("Could not read csv file %q: %s", key, err.Error())
 			}
 		}
 
@@ -111,17 +178,16 @@ func parseVariables(cmd *cobra.Command, args []string) {
 
 		templateCSVVariables[key], err = csvp.Typed(csvBytes)
 		if err != nil {
-			fmt.Fprint(cmd.OutOrStderr(), errors.Wrapf(err, "Could not parse CSV file %s", csvFileName))
-			os.Exit(1)
+			println(len(csvBytes))
+			log.Fatalf("Could not parse csv file %q: %s", csvFileName, err.Error())
 		}
 	}
 
-	templateVariables = make(map[string]interface{})
+	templateVariables = map[string]any{}
 	for _, v := range vars {
-		key, value, err := splitVarParam(v)
-		if err != nil {
-			fmt.Fprint(cmd.OutOrStderr(), err)
-			os.Exit(1)
+		key, value, ok := strings.Cut(v, "=")
+		if !ok {
+			log.Fatalf("Unable to split --var %q", v)
 		}
 		templateVariables[key] = value
 	}
@@ -129,79 +195,73 @@ func parseVariables(cmd *cobra.Command, args []string) {
 
 func render(cmd *cobra.Command, args []string) {
 
-	var (
-		tpl *template.Template
-		err error
-	)
-
 	if len(args) == 0 && eval == "" {
 		cmd.Usage()
 		os.Exit(1)
 	}
 
+	tplBytes := []byte{}
 	if eval != "" {
-		tpl = template.New("eval").Funcs(sprig.FuncMap())
-		tpl = tpl.Delims(templateDelimLeft, templateDelimRight)
-		tpl, err = tpl.Parse(eval)
-		if err != nil {
-			fmt.Fprint(cmd.OutOrStderr(), errors.Wrapf(err, "Could not parse inline template `%s`", eval))
-			os.Exit(1)
-		}
+		tplBytes = append(tplBytes, eval...)
 	}
 
 	for _, arg := range args {
-		var t *template.Template
 		if arg == "-" {
-			if tpl == nil {
-				tpl = template.New("stdin").Funcs(sprig.FuncMap())
-				t = tpl
-			} else {
-				t = tpl.New("stdin")
-			}
-			stdInBytes, err := ioutil.ReadAll(cmd.InOrStdin())
-			if err != nil {
-				fmt.Fprint(cmd.OutOrStderr(), errors.Wrap(err, "Could not read stdin"))
-				os.Exit(1)
-			}
-			t = t.Delims(templateDelimLeft, templateDelimRight)
-			_, err = t.Parse(string(stdInBytes))
-			if err != nil {
-				fmt.Fprint(cmd.OutOrStderr(), errors.Wrapf(err, "Could not parse template from stdin: %s", string(stdInBytes)))
-				os.Exit(1)
-			}
+			tplBytes = append(tplBytes, stdin()...)
 		} else {
-			if tpl == nil {
-				tpl = template.New(filepath.Base(arg)).Funcs(sprig.FuncMap())
-				t = tpl
-			} else {
-				t = tpl.New(filepath.Base(arg))
-			}
-			t = t.Delims(templateDelimLeft, templateDelimRight)
-			_, err = t.ParseFiles(arg)
+			fBytes, err := os.ReadFile(arg)
 			if err != nil {
-				fmt.Fprint(cmd.OutOrStderr(), errors.Wrapf(err, "Could not parse template file %s", arg))
-				os.Exit(1)
+				log.Fatalf("Unable to read %q: %s", arg, err.Error())
 			}
+			tplBytes = append(tplBytes, fBytes...)
 		}
 	}
 
-	data := map[string]interface{}{
-		"Env": templateEnvVariables,
-		"Var": templateVariables,
-		"CSV": templateCSVVariables,
+	data := map[string]any{
+		"env":  templateEnvVariables,
+		"var":  templateVariables,
+		"csv":  templateCSVVariables,
+		"yml":  templateYML,
+		"json": templateJSON,
 	}
 
-	err = tpl.Execute(cmd.OutOrStdout(), data)
-	if err != nil {
-		fmt.Fprint(cmd.OutOrStderr(), errors.Wrapf(err, "Could not execute template file %s with data %v", tpl.Name(), data))
-		os.Exit(1)
+	if dump {
+		pp.Println(data)
+		os.Exit(0)
 	}
-}
 
-func splitVarParam(param string) (string, string, error) {
-	parts := strings.Split(param, "=")
-	if len(parts) < 2 {
-		return "", "", errors.Errorf("Flag arguments should be `name=value`, given %s", param)
+	var err error
+
+	// HTML rendering
+	if html {
+		tpl := template.
+			New("tmpl").
+			Funcs(sprig.FuncMap()).
+			Delims(templateDelimLeft, templateDelimRight)
+		if len(tplBytes) > 0 {
+			tpl, err = tpl.Parse(string(tplBytes))
+			if err != nil {
+				log.Fatalf("Could not parse template: %s", err.Error())
+			}
+		}
+		err = tpl.Execute(os.Stdout, data)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+	} else {
+		tpl := ttemplate.
+			New("tmpl").
+			Funcs(sprig.FuncMap()).
+			Delims(templateDelimLeft, templateDelimRight)
+		if len(tplBytes) > 0 {
+			tpl, err = tpl.Parse(string(tplBytes))
+			if err != nil {
+				log.Fatalf("Could not parse template: %s", err.Error())
+			}
+		}
+		err = tpl.Execute(os.Stdout, data)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
 	}
-	return parts[0], strings.Join(parts[1:], "="), nil
 }
