@@ -20,6 +20,7 @@ go install github.com/programmfabrik/gotmplx
 |      | `--yml`                  | []string | Parse and use yml file in template (--yml key=file) |
 |      | `--json`                 | []string | Parse and use json file in template (--json key=file) |
 |      | `--dump`                 | bool     | Dump parsed data which is passed to template. |
+| `-o` | `--output`               | string   | Send output to file, use "-" for stdout (default) |
 |      | `--html`                 | bool     | Render template as HTML, defaults to text rendering. |
 | `-e` | `--eval`                 | string   | Parse this text instead of file argument (--eval "{{ .Var.myvar }}" |
 | `-h` | `--help`                 |          | Help for gotmplx |

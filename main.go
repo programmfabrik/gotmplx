@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -39,18 +40,15 @@ var (
 		Run:     render,
 		PreRun:  parseVariables,
 	}
-	vars, csvs, ymls, jsons   []string
-	eval                      string
-	templateEnvVariables      map[string]any
-	templateVariables         map[string]any
-	templateCSVVariables      map[string][]map[string]any
-	templateYML, templateJSON map[string]any
+	vars, csvs, ymls, jsons                                            []string
+	eval, output                                                       string
+	templateEnvVariables, templateVariables, templateYML, templateJSON map[string]any
+	templateCSVVariables                                               map[string][]map[string]any
 
 	dump, html bool
 
-	templateDelimLeft  string
-	templateDelimRight string
-	stdinBytes         []byte
+	templateDelimLeft, templateDelimRight string
+	stdinBytes                            []byte
 )
 
 func init() {
@@ -62,6 +60,8 @@ func init() {
 	rootCmd.Flags().BoolVarP(&dump, "dump", "d", false, "Pretty print data passed to template to stdout")
 	rootCmd.Flags().BoolVarP(&html, "html", "", false, "Render template as HTML (default is TEXT)")
 	rootCmd.Flags().StringVarP(&eval, "eval", "e", "", "Parse this text instead of file argument (--eval \"{{ .Var.myvar }}\"")
+	rootCmd.Flags().StringVarP(&output, "output", "o", "-", `Send output to file. Use for "-" (default)`)
+
 	rootCmd.Flags().StringVarP(&templateDelimLeft, "template-delim-left", "l", "", "Use this as left delimiter in go templates")
 	rootCmd.Flags().StringVarP(&templateDelimRight, "template-delim-right", "r", "", "Use this as right delimiter in go templates")
 }
@@ -259,7 +259,18 @@ func render(cmd *cobra.Command, args []string) {
 				log.Fatalf("Could not parse template: %s", err.Error())
 			}
 		}
-		err = tpl.Execute(os.Stdout, data)
+
+		var out io.Writer
+		if output != "-" {
+			out, err = os.Create(output)
+			if err != nil {
+				log.Fatalf("Unable to open %q for output: %s", output, err.Error())
+			}
+		} else {
+			out = os.Stdout
+		}
+
+		err = tpl.Execute(out, data)
 		if err != nil {
 			log.Fatal(err.Error())
 		}
