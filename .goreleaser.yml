@@ -20,7 +20,7 @@ archives:
   - format: binary
 
 release:
-  draft: true
+  draft: false
   prerelease: auto
   name_template: "gotmplx-{{.Tag}}"
 
@@ -37,3 +37,4 @@ changelog:
       - '^ci:'
       - '^cd:'
       - '^ci/cd:'
+      - '^goreleaser:'
