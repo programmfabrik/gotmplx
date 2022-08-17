@@ -19,7 +19,7 @@ import (
 	"strings"
 	ttemplate "text/template"
 
-	"github.com/Masterminds/sprig"
+	"github.com/Masterminds/sprig/v3"
 	"github.com/programmfabrik/go-csvx"
 	"github.com/spf13/cobra"
 	"github.com/yudai/pp"
